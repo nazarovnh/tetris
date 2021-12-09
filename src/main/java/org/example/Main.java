@@ -1,15 +1,17 @@
 package org.example;
 
-import org.example.figure.Figure;
 import org.example.game.Game;
-import org.example.render.Render;
 
-import javax.swing.*;
-
-
+/**
+ * Main class
+ */
 public class Main {
+    /**
+     * Point entry in program
+     *
+     * @param args - args
+     */
     public static void main(String[] args) {
-        Game game = new Game();
-        game.start();
+        new Game().start();
     }
 }

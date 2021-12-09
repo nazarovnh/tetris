@@ -1,14 +1,21 @@
 package org.example.figure;
 
-import org.example.block.Block;
+import org.example.pixel.Pixel;
 import org.example.utils.Utils;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Random;
 
+/**
+ * class Figure
+ * Realization of figure in the game.
+ * All figures consist of block, if block part of figure
+ * has a value more than zero in array SHAPES
+ * else zero.
+ */
 public class Figure {
-    private ArrayList<Block> figure = new ArrayList<Block>();
+    private ArrayList<Pixel> figure = new ArrayList<Pixel>();
     private int[][] shape = new int[4][4];
     private int type, size, color;
     private int x = 3;
@@ -26,6 +33,11 @@ public class Figure {
             {{1, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {3, 0xf00000}}  // Z
     };
 
+    /**
+     * public constructor of Figure
+     *
+     * @param utils - class contains all const and mine of game
+     */
     public Figure(Utils utils) {
         type = random.nextInt(SHAPES.length);
         size = SHAPES[type][4][0];
@@ -37,19 +49,51 @@ public class Figure {
         this.utils = utils;
     }
 
+    /**
+     * Check collision figure with wall
+     *
+     * @param direction - direction of move figure
+     * @return is figure touch wall
+     */
+    /*TODO(add condition for index out)*/
+    public boolean isTouchWall(int direction) {
+        for (Pixel pixel : figure) {
+            if (direction == utils.LEFT && (pixel.getX() == 0 || utils.getMine()[pixel.getY()][pixel.getX() - 1] > 0))
+                return true;
+            if (direction == utils.RIGHT && (pixel.getX() == utils.FIELD_WIDTH - 1 || utils.getMine()[pixel.getY()][pixel.getX() + 1] > 0))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Move figure left or right
+     *
+     * @param keyCode - direction of move
+     */
     public void move(int keyCode) {
+        if (!isTouchWall(keyCode)) {
+            int dx = keyCode - 38;
+            for (Pixel pixel :
+                    figure) {
+                pixel.setX(pixel.getX() + dx);
+            }
+        }
     }
 
     /**
      * Drop a figure press arrow down ↓
      */
     public void drop() {
-        System.out.println("down");
-        while (!isTouchDown()) fallDown();
+
+        /*while (!isTouchDown()) fallDown();*/
     }
 
+    /**
+     * Rotate the figure
+     */
     public void rotate() {
-        System.out.println("up");
+        /*TODO: need realization of rotate of figure*/
     }
 
     /**
@@ -58,8 +102,8 @@ public class Figure {
      * @return is figure touch ground
      */
     public boolean isTouchDown() {
-        for (Block block : figure) {
-            if (utils.getMine()[block.getY() + 1][block.getX()] > 0) {
+        for (Pixel pixel : figure) {
+            if (utils.getMine()[pixel.getY() + 1][pixel.getX()] > 0) {
                 return true;
             }
         }
@@ -73,28 +117,34 @@ public class Figure {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 if (shape[i][j] == 1) {
-                    figure.add(new Block(i + this.x, j + this.y));
+                    figure.add(new Pixel(i + this.x, j + this.y));
                 }
             }
         }
     }
 
     /**
-     * Checking game over
+     * Checking game over.
+     * Game over if any figure can not fall from start position.
      *
-     * @return
+     * @return is game over
      */
     public boolean isCrossDown() {
+        for (Pixel pixel : figure)
+            if ((pixel.getY() <= utils.FIELD_HEIGHT && pixel.getY() >= 0 &&
+                    pixel.getX() <= utils.FIELD_WIDTH && pixel.getX() >= 0) &&
+                    (utils.getMine()[pixel.getY()][pixel.getX()] > 0)) return true;
         return false;
     }
 
     /**
-     * Decrement position of figure by Oy axis
+     * Realization of fall down of figure.
+     * Decrement position of figure by Oy axis.
      */
     public void fallDown() {
-        for (Block block :
+        for (Pixel pixel :
                 figure) {
-            block.setY(block.getY() + 1);
+            pixel.setY(pixel.getY() + 1);
             y++;
         }
     }
@@ -104,8 +154,8 @@ public class Figure {
      * Array of mine set color of figure in position blocks in figure
      */
     public void leaveOnTheGround() {
-        for (Block block : figure) {
-            utils.setNewValueMine(block.getY(), block.getX(), color);
+        for (Pixel pixel : figure) {
+            utils.setNewValueMine(pixel.getY(), pixel.getX(), color);
         }
     }
 
@@ -115,9 +165,9 @@ public class Figure {
      * @param g - Graphics
      */
     public void paint(Graphics g) {
-        for (Block block :
+        for (Pixel pixel :
                 figure) {
-            block.paint(g, color);
+            pixel.paint(g, color);
         }
     }
 }

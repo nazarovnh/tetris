@@ -10,35 +10,30 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.Arrays;
 
-import static com.sun.java.accessibility.util.AWTEventMonitor.addKeyListener;
+import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 
 public class Game {
 
     private Utils utils = new Utils();
     private Render render;
     private Figure figure;
-    JFrame frame;
+    private JFrame frame;
 
 
-    public int gameScore = 0;
-    public boolean gameOver = false;
+    private int gameScore = 0;
 
     public Game() {
         this.figure = new Figure(utils);
         render = new Render(this.figure, utils);
-    }
-
-    public void start() {
         frame = new JFrame(utils.TITLE_OF_PROGRAM);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(utils.FIELD_WIDTH * utils.BLOCK_SIZE + utils.FIELD_DX,
-                utils.FIELD_HEIGHT * utils.BLOCK_SIZE + utils.FIELD_DY);
-        frame.setLocation(utils.START_LOCATION, utils.START_LOCATION);
+        frame.setTitle(utils.TITLE_OF_PROGRAM);
+        frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        frame.setBounds(utils.START_LOCATION, utils.START_LOCATION, utils.FIELD_WIDTH * utils.BLOCK_SIZE + utils.FIELD_DX, utils.FIELD_HEIGHT * utils.BLOCK_SIZE + utils.FIELD_DY);
         frame.setResizable(false);
         render.setBackground(Color.black);
-        addKeyListener(new KeyAdapter() {
+        frame.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
-                if (!gameOver) {
+                if (!utils.isGameOver()) {
                     if (e.getKeyCode() == utils.DOWN) figure.drop();
                     if (e.getKeyCode() == utils.UP) figure.rotate();
                     if (e.getKeyCode() == utils.LEFT || e.getKeyCode() == utils.RIGHT) figure.move(e.getKeyCode());
@@ -49,8 +44,10 @@ public class Game {
         frame.add(BorderLayout.CENTER, render);
         frame.setVisible(true);
         Arrays.fill(utils.getMine()[utils.FIELD_HEIGHT], 1);
+    }
 
-        while (!gameOver) {
+    public void start() {
+        while (!utils.isGameOver()) {
             try {
                 Thread.sleep(utils.SHOW_DELAY);
             } catch (Exception e) {
@@ -62,7 +59,7 @@ public class Game {
                 checkFilling();
                 this.figure = new Figure(utils);
                 render.setFigure(this.figure);
-                gameOver = figure.isCrossDown();
+                utils.setGameOver(figure.isCrossDown());
             } else {
                 figure.fallDown();
             }
@@ -70,6 +67,24 @@ public class Game {
 
     }
 
-    void checkFilling() {
+    public void checkFilling() {
+        int row = utils.FIELD_HEIGHT - 1;
+        int countFillRows = 0;
+        while (row > 0) {
+            int filled = 1;
+            for (int col = 0; col < utils.FIELD_WIDTH; col++)
+                filled *= Integer.signum(utils.getMine()[row][col]);
+            if (filled > 0) {
+                countFillRows++;
+                for (int i = row; i > 0; i--)
+                    System.arraycopy(utils.getMine()[i - 1], 0,
+                            utils.getMine()[i], 0, utils.FIELD_WIDTH);
+            } else
+                row--;
+        }
+        if (countFillRows > 0) {
+            gameScore += utils.SCORES[countFillRows - 1];
+            frame.setTitle(utils.TITLE_OF_PROGRAM + " : " + gameScore);
+        }
     }
 }
